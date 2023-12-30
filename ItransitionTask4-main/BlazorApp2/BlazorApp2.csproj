@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-BlazorApp2-C4262A72-3303-4B04-B1DD-C9F7D583076E</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.15" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.15" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.15" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.15" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.15" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.15" />
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.13" />
+        <PackageReference Include="MudBlazor" Version="6.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Data\Migrations" />
+    </ItemGroup>
+
+</Project>

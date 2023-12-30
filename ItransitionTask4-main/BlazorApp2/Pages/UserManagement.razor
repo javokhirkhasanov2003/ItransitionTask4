@@ -1,0 +1,142 @@
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@page "/User-Management"
+@using Microsoft.AspNetCore.Authentication
+@using BlazorApp2.Areas.Identity
+
+@attribute [Authorize]
+
+<MudText Typo="Typo.h5">User Management</MudText>
+
+<MudPaper Class="mt-5 d-flex justify-content-end" Elevation="0">
+    <MudButton Class="mx-2" OnClick="Block" Size="Size.Small" Variant="Variant.Filled">Block</MudButton>
+    <MudButton Class="mx-2" OnClick="Unblock" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">Unblock</MudButton>
+    <MudButton Class="mx-2" OnClick="Delete" Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary">Delete</MudButton>
+</MudPaper>
+
+<MudTable @ref="_table"  Class="mt-5"
+          T="UserVM"
+          Items="Users"
+          MultiSelection="true" 
+          @bind-SelectedItems="SelectedUsers" 
+          Hover="true"
+          SelectOnRowClick="true">
+    <HeaderContent>
+        <MudTh>Nr</MudTh>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Last Login</MudTh>
+        <MudTh>Register Date</MudTh>
+        <MudTh>Status</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nr">@context.Nr</MudTd>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="Last Login">@context.LastLoginDate</MudTd>
+        <MudTd DataLabel="Register Date">@context.RegistrationDate</MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsBlocked)
+            {
+                <MudText Color="Color.Error">Blocked</MudText>
+            }
+            else
+            {
+                <MudText Color="Color.Success">Active</MudText>
+            }
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<UserVM> Users = new();
+    private MudTable<UserVM> _table;
+
+    private HashSet<UserVM> SelectedUsers = new();
+
+    private AuthenticationState _authenticationState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAuthState();
+        
+        var users = await DbContext.Users.ToListAsync();
+
+        Users = users.Select(x => new UserVM()
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Email = x.Email,
+            LastLoginDate = x.LastLoginDate,
+            RegistrationDate = x.RegistrationDate,
+            IsBlocked = x.IsBlocked
+        }).ToList();
+
+        Users = Users.Numerate().ToList();
+    }
+    
+    private async Task Block()
+    {
+        foreach (var user in SelectedUsers)
+        {
+            if(user.IsBlocked) 
+                continue;
+            
+            var userEntity = await DbContext.Users.FirstOrDefaultAsync(x => x.Id == user.Id);
+            
+            if(userEntity == null) 
+                continue;
+            
+            userEntity.IsBlocked = true;
+        }
+
+        await DbContext.SaveChangesAsync();
+        
+        await GetAuthState();
+    }
+    
+    
+    private async Task Unblock()
+    {
+        foreach (var user in SelectedUsers)
+        {
+            if(!user.IsBlocked) 
+                continue;
+            
+            var userEntity = await DbContext.Users.FirstOrDefaultAsync(x => x.Id == user.Id);
+            
+            if(userEntity == null) 
+                continue;
+            
+            userEntity.IsBlocked = false;
+        }
+
+        await DbContext.SaveChangesAsync();
+    }
+    
+    private async Task Delete()
+    {
+        foreach (var user in SelectedUsers)
+        {
+            var userEntity = await DbContext.Users.FirstOrDefaultAsync(x => x.Id == user.Id);
+            if (userEntity != null) 
+                DbContext.Users.Remove(userEntity);
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        await GetAuthState();
+    }
+    
+    private async Task<AuthenticationState> GetAuthState()
+    {
+        var authStateProvider = (RevalidatingIdentityAuthenticationStateProvider) AuthenticationStateProvider;
+        return await authStateProvider.GetAuthenticationStateAsync().ConfigureAwait(false);
+    }
+}
